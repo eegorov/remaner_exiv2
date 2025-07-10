@@ -1,6 +1,7 @@
 #include <QtCore>
 #include <exiv2/exiv2.hpp>
-
+#include <stdio.h>
+#include <iostream>
 
 QString tryGetValue(Exiv2::ExifData &exif, const QStringList &tags)
 {
@@ -35,7 +36,7 @@ int main()
         extention = extention.toLower();
         while( extention == ".jpg" || extention == ".jpeg" )
         {
-            Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(fn.toUtf8().data());
+            auto image = Exiv2::ImageFactory::open(fn.toUtf8().data());
             image->readMetadata();
             Exiv2::ExifData &exifData = image->exifData();
             if (exifData.empty())
@@ -56,7 +57,7 @@ int main()
                 }
                 else if(typeName == "Short" || typeName == "Long")
                 {
-                    Value = QString("%1").arg(i->value().toLong());
+                    Value = QString("%1").arg(i->value().toInt64());
                 }
                 else if(typeName == "Rational")
                 {
@@ -89,11 +90,12 @@ int main()
             QDateTime dt = QDateTime::fromString(datetime, "yyyy:MM:dd hh:mm:ss");
 
             QString subSecs = tryGetValue(exifData, subSecsTags);
+            //qDebug() << "subSecs: " << subSecs;
             if(!subSecs.isEmpty())
             {
                 bool ok;
                 qint32 msecs = subSecs.toInt(&ok);
-                dt = dt.addMSecs(msecs);
+                dt = dt.addMSecs(msecs%1000);
             }
 
             QString timeZone = tryGetValue(exifData, timezoneTags);
